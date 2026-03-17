@@ -1,1 +1,3 @@
-// MiniImp runtime environment will go here.
+use std::collections::HashMap;
+
+pub type Memory = HashMap<String, i64>;
