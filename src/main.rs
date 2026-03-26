@@ -3,9 +3,15 @@ mod miniimp;
 mod minifun;
 
 use miniimp::ast::Program;
-use miniimp::eval::eval_program;
+use miniimp::eval::eval_program as eval_miniimp_program;
 use miniimp::lexer::tokenize;
 use miniimp::parser::parse_tokens;
+
+use minifun::ast::Term;
+use minifun::eval::eval_program as eval_minifun_program;
+
+
+
 
 fn main() {
     let source = "out := in + 2";
@@ -24,72 +30,74 @@ fn main() {
                         body: cmd,
                     };
 
-                    match eval_program(&program, 5) {
+                    match eval_miniimp_program(&program, 5) {
                         Ok(result) => {
-                            println!("Program finished successfully.");
-                            println!("Result = {}", result);
+                            println!("MiniImp program finished successfully.");
+                            println!("MiniImp result = {}", result);
                         }
                         Err(error) => {
-                            println!("Runtime error:");
+                            println!("MiniImp runtime error:");
                             println!("{}", error);
                         }
                     }
                 }
                 Err(error) => {
-                    println!("Parser error:");
+                    println!("MiniImp parser error:");
                     println!("{}", error);
                 }
             }
         }
         Err(error) => {
-            println!("Lexer error:");
+            println!("MiniImp lexer error:");
+            println!("{}", error);
+        }
+    }
+
+    println!();
+    println!("-----------------------------");
+    println!();
+
+    // MiniFun test 1
+    let term1 = Term::Add(
+        Box::new(Term::Int(40)),
+        Box::new(Term::Int(2)),
+    );
+
+    match eval_minifun_program(&term1) {
+        Ok(value) => {
+            println!("MiniFun test 1 finished successfully.");
+            println!("MiniFun result 1 = {:?}", value);
+        }
+        Err(error) => {
+            println!("MiniFun runtime error in test 1:");
+            println!("{}", error);
+        }
+    }
+
+    println!();
+    println!("-----------------------------");
+    println!();
+
+    // MiniFun test 2
+    let term2 = Term::App(
+        Box::new(Term::Fun(
+            "x".to_string(),
+            Box::new(Term::Add(
+                Box::new(Term::Var("x".to_string())),
+                Box::new(Term::Int(1)),
+            )),
+        )),
+        Box::new(Term::Int(5)),
+    );
+
+    match eval_minifun_program(&term2) {
+        Ok(value) => {
+            println!("MiniFun test 2 finished successfully.");
+            println!("MiniFun result 2 = {:?}", value);
+        }
+        Err(error) => {
+            println!("MiniFun runtime error in test 2:");
             println!("{}", error);
         }
     }
 }
-
-// fn main() {
-//     let source = "out := in + 2;";
-
-//     match tokenize(source) {
-//         Ok(tokens) => {
-//             println!("Tokens:");
-//             for token in tokens {
-//                 println!("{:?}", token);
-//             }
-//         }
-//         Err(error) => {
-//             println!("{}", error);
-//         }
-//     }
-// }
-
-
-
-// fn main() {
-//     let program = Program {
-//         input_var: "in".to_string(),
-//         output_var: "out".to_string(),
-
-//         body: Cmd::Assign(
-//             "out".to_string(),
-//             Expr::Add(
-//                 Box::new(Expr::Var("in".to_string())),
-//                 Box::new(Expr::Int(2)),
-//             ),
-//         ),
-//     };
-
-//     // Run the program with input = 5
-//     match eval_program(&program, 5) {
-//         Ok(result) => {
-//             println!("Program finished successfully.");
-//             println!("Result = {}", result);
-//         }
-
-//         Err(error) => {
-//             println!("Program failed with error:");
-//             println!("{}", error);
-//         }
-//     }
-// }
