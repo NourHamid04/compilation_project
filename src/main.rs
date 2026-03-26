@@ -10,7 +10,8 @@ use miniimp::parser::parse_tokens;
 use minifun::ast::Term;
 use minifun::eval::eval_program as eval_minifun_program;
 
-
+use minifun::lexer::tokenize as tokenize_minifun;
+use minifun::parser::parse_tokens as parse_minifun_tokens;
 
 
 fn main() {
@@ -100,4 +101,38 @@ fn main() {
             println!("{}", error);
         }
     }
+
+
+
+let source = "letfun f x = if x < 2 then 1 else x + f (x - 1) in f 4";
+match tokenize_minifun(source) {
+    Ok(tokens) => {
+        println!("MiniFun Tokens: {:?}", tokens);
+
+        match parse_minifun_tokens(tokens) {
+            Ok(term) => {
+                println!("MiniFun Parsed AST: {:?}", term);
+
+                match eval_minifun_program(&term) {
+                    Ok(result) => {
+                        println!("MiniFun program finished successfully.");
+                        println!("MiniFun result = {:?}", result);
+                    }
+                    Err(error) => {
+                        println!("MiniFun runtime error:");
+                        println!("{}", error);
+                    }
+                }
+            }
+            Err(error) => {
+                println!("MiniFun parser error:");
+                println!("{}", error);
+            }
+        }
+    }
+    Err(error) => {
+        println!("MiniFun lexer error:");
+        println!("{}", error);
+    }
+}
 }
