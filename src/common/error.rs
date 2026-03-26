@@ -32,6 +32,8 @@ pub enum EvalError {
 
     ParseError(String),
     UnexpectedEndOfInput,
+    TypeError(String),
+
 }
 
 /// This implementation tells Rust how to convert our error
@@ -62,6 +64,12 @@ impl fmt::Display for EvalError {
             EvalError::ParseError(message) => {
                 write!(f, "Parse error: {}", message)
             }
+
+            EvalError::TypeError(message) => {
+                write!(f, "Type error: {}", message)
+            }
+
+
             EvalError::UnexpectedEndOfInput => {
                 write!(f, "Parse error: unexpected end of input.")
             }
