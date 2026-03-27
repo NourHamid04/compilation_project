@@ -1,3 +1,5 @@
+use crate::minifun::types::Type;
+
 #[derive(Debug, Clone)]
 pub enum Term {
     Int(i64),
@@ -5,7 +7,7 @@ pub enum Term {
     False,
     Var(String),
 
-    Fun(String, Box<Term>),
+    Fun(String, Type, Box<Term>),
     App(Box<Term>, Box<Term>),
 
     Add(Box<Term>, Box<Term>),
@@ -17,5 +19,6 @@ pub enum Term {
 
     If(Box<Term>, Box<Term>, Box<Term>),
     Let(String, Box<Term>, Box<Term>),
-    LetFun(String, String, Box<Term>, Box<Term>),
+
+    LetFun(String, String, Type, Box<Term>, Box<Term>),
 }
