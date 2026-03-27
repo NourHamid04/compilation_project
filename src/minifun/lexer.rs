@@ -2,7 +2,6 @@ use crate::common::error::EvalError;
 
 /// Tokens are the small building blocks produced by the lexer.
 /// The parser will consume these tokens and build the AST.
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Identifier(String),
@@ -18,8 +17,8 @@ pub enum Token {
     In,
     Fun,
     LetFun,
-    And,
-    Not,
+    And,   
+    Not,   
 
     // Symbols / operators
     Equal,      // =
@@ -67,8 +66,6 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
                 "in" => Token::In,
                 "fun" => Token::Fun,
                 "letfun" => Token::LetFun,
-                "and" => Token::And,
-                "not" => Token::Not,
                 _ => Token::Identifier(word),
             };
 
@@ -103,6 +100,20 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
                     tokens.push(Token::Equal);
                     i += 1;
                 }
+            }
+            '&' => {
+                if i + 1 < chars.len() && chars[i + 1] == '&' {
+                    tokens.push(Token::And);
+                    i += 2;
+                } else {
+                    return Err(EvalError::ParseError(
+                        "expected '&' after '&' to form '&&'".to_string(),
+                    ));
+                }
+            }
+            '~' => {
+                tokens.push(Token::Not);
+                i += 1;
             }
             '(' => {
                 tokens.push(Token::LParen);
