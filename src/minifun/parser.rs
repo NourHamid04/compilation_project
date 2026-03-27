@@ -1,7 +1,7 @@
 use crate::common::error::EvalError;
 use crate::minifun::ast::Term;
 use crate::minifun::lexer::Token;
-
+use crate::minifun::types::Type;
 /// A simple recursive-descent parser for MiniFun.
 ///
 /// The parser reads a list of tokens and builds the corresponding AST.
@@ -139,6 +139,9 @@ impl Parser {
             None => return Err(EvalError::UnexpectedEndOfInput),
         };
 
+        self.expect(Token::Colon)?;
+        let function_type = self.parse_type()?;
+
         self.expect(Token::Equal)?;
         let function_body = self.parse_term()?;
         self.expect(Token::In)?;
@@ -147,6 +150,7 @@ impl Parser {
         Ok(Term::LetFun(
             function_name,
             parameter_name,
+            function_type,
             Box::new(function_body),
             Box::new(in_term),
         ))
@@ -168,10 +172,13 @@ impl Parser {
             None => return Err(EvalError::UnexpectedEndOfInput),
         };
 
+        self.expect(Token::Colon)?;
+        let parameter_type = self.parse_type()?;
+
         self.expect(Token::Arrow)?;
         let body = self.parse_term()?;
 
-        Ok(Term::Fun(parameter_name, Box::new(body)))
+        Ok(Term::Fun(parameter_name, parameter_type, Box::new(body)))
     }
 
     /// Parses `and` with left associativity.
@@ -319,6 +326,48 @@ impl Parser {
 
         Ok(term)
     }
+    
+/// Parses a type (e.g., int, bool, int -> int)
+fn parse_type(&mut self) -> Result<Type, EvalError> {
+    let mut ty = self.parse_atomic_type()?;
+
+    // left associative: int -> bool -> int
+    while self.check(&Token::TypeArrow) {
+        self.advance();
+        let right = self.parse_atomic_type()?;
+        ty = Type::Fun(Box::new(ty), Box::new(right));
+    }
+
+    Ok(ty)
+}
+
+/// Parses atomic types
+fn parse_atomic_type(&mut self) -> Result<Type, EvalError> {
+    match self.advance() {
+        Some(Token::TypeInt) => Ok(Type::Int),
+
+        Some(Token::TypeBool) => Ok(Type::Bool),
+
+        Some(Token::LParen) => {
+            let ty = self.parse_type()?;
+            self.expect(Token::RParen)?;
+            Ok(ty)
+        }
+
+        Some(token) => Err(EvalError::ParseError(format!(
+            "unexpected token {:?} while parsing a type",
+            token
+        ))),
+
+        None => Err(EvalError::UnexpectedEndOfInput),
+    }
+}
+
+
+
+
+
+
 }
 
 /// Parses a full MiniFun token list into an AST term.

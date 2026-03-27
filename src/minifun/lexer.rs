@@ -17,12 +17,20 @@ pub enum Token {
     In,
     Fun,
     LetFun,
-    And,   
-    Not,   
+
+    // Logical operators
+    And,   // &&
+    Not,   // ~
+
+    // Type keywords
+    TypeInt,    // int
+    TypeBool,   // bool
 
     // Symbols / operators
     Equal,      // =
     Arrow,      // =>
+    Colon,      // :
+    TypeArrow,  // ->
     LParen,     // (
     RParen,     // )
     Plus,       // +
@@ -66,6 +74,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
                 "in" => Token::In,
                 "fun" => Token::Fun,
                 "letfun" => Token::LetFun,
+                "int" => Token::TypeInt,
+                "bool" => Token::TypeBool,
                 _ => Token::Identifier(word),
             };
 
@@ -101,6 +111,19 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
                     i += 1;
                 }
             }
+            ':' => {
+                tokens.push(Token::Colon);
+                i += 1;
+            }
+            '-' => {
+                if i + 1 < chars.len() && chars[i + 1] == '>' {
+                    tokens.push(Token::TypeArrow);
+                    i += 2;
+                } else {
+                    tokens.push(Token::Minus);
+                    i += 1;
+                }
+            }
             '&' => {
                 if i + 1 < chars.len() && chars[i + 1] == '&' {
                     tokens.push(Token::And);
@@ -125,10 +148,6 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
             }
             '+' => {
                 tokens.push(Token::Plus);
-                i += 1;
-            }
-            '-' => {
-                tokens.push(Token::Minus);
                 i += 1;
             }
             '*' => {

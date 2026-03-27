@@ -34,8 +34,8 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
         // 2. the function body
         // 3. the current environment
 
-        Term::Fun(parameter_name, body) => {
-            Ok(Value::Closure(
+        Term::Fun(parameter_name, _parameter_type, body) => {
+                Ok(Value::Closure(
                 parameter_name.clone(),
                 body.clone(),
                 env.clone(),
@@ -58,8 +58,8 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
         //
         // This creates a recursive closure and binds it to f.
         // Then t2 is evaluated in the extended environment.
-        Term::LetFun(function_name, parameter_name, function_body, in_term) => {
-            let mut updated_env = env.clone();
+        Term::LetFun(function_name, parameter_name, _function_type, function_body, in_term) => {
+                let mut updated_env = env.clone();
 
             let recursive_closure = Value::RecClosure(
                 function_name.clone(),

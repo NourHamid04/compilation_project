@@ -7,12 +7,60 @@ use miniimp::eval::eval_program as eval_miniimp_program;
 use miniimp::lexer::tokenize;
 use miniimp::parser::parse_tokens;
 
-use minifun::ast::Term;
 use minifun::eval::eval_program as eval_minifun_program;
-
 use minifun::lexer::tokenize as tokenize_minifun;
 use minifun::parser::parse_tokens as parse_minifun_tokens;
+use minifun::typecheck::typecheck_program;
 
+fn test_minifun(source: &str) {
+    println!("MiniFun source: {}", source);
+
+    match tokenize_minifun(source) {
+        Ok(tokens) => {
+            println!("MiniFun Tokens: {:?}", tokens);
+
+            match parse_minifun_tokens(tokens) {
+                Ok(term) => {
+                    println!("MiniFun Parsed AST: {:?}", term);
+
+                    match typecheck_program(&term) {
+                        Ok(term_type) => {
+                            println!("MiniFun typechecking finished successfully.");
+                            println!("MiniFun type = {:?}", term_type);
+
+                            match eval_minifun_program(&term) {
+                                Ok(result) => {
+                                    println!("MiniFun evaluation finished successfully.");
+                                    println!("MiniFun result = {:?}", result);
+                                }
+                                Err(error) => {
+                                    println!("MiniFun runtime error:");
+                                    println!("{}", error);
+                                }
+                            }
+                        }
+                        Err(error) => {
+                            println!("MiniFun typechecking error:");
+                            println!("{}", error);
+                        }
+                    }
+                }
+                Err(error) => {
+                    println!("MiniFun parser error:");
+                    println!("{}", error);
+                }
+            }
+        }
+        Err(error) => {
+            println!("MiniFun lexer error:");
+            println!("{}", error);
+        }
+    }
+
+    println!();
+    println!("-----------------------------");
+    println!();
+}
 
 fn main() {
     let source = "out := in + 2";
@@ -55,84 +103,19 @@ fn main() {
     }
 
     println!();
-    println!("-----------------------------");
+    println!("=============================");
     println!();
 
-    // MiniFun test 1
-    let term1 = Term::Add(
-        Box::new(Term::Int(40)),
-        Box::new(Term::Int(2)),
-    );
+    // Well-typed Fragment 3 tests
+    test_minifun("fun x : int => x + 1");
+    test_minifun("(fun x : int => x + 1) 5");
+    test_minifun("let x = 5 in x + 1");
+    test_minifun("if true then 10 else 20");
+    test_minifun("letfun f x : int -> int = if x < 2 then 1 else x + f (x - 1) in f 4");
 
-    match eval_minifun_program(&term1) {
-        Ok(value) => {
-            println!("MiniFun test 1 finished successfully.");
-            println!("MiniFun result 1 = {:?}", value);
-        }
-        Err(error) => {
-            println!("MiniFun runtime error in test 1:");
-            println!("{}", error);
-        }
-    }
-
-    println!();
-    println!("-----------------------------");
-    println!();
-
-    // MiniFun test 2
-    let term2 = Term::App(
-        Box::new(Term::Fun(
-            "x".to_string(),
-            Box::new(Term::Add(
-                Box::new(Term::Var("x".to_string())),
-                Box::new(Term::Int(1)),
-            )),
-        )),
-        Box::new(Term::Int(5)),
-    );
-
-    match eval_minifun_program(&term2) {
-        Ok(value) => {
-            println!("MiniFun test 2 finished successfully.");
-            println!("MiniFun result 2 = {:?}", value);
-        }
-        Err(error) => {
-            println!("MiniFun runtime error in test 2:");
-            println!("{}", error);
-        }
-    }
-
-
-
-let source = "letfun f x = if x < 2 then 1 else x + f (x - 1) in f 4";
-match tokenize_minifun(source) {
-    Ok(tokens) => {
-        println!("MiniFun Tokens: {:?}", tokens);
-
-        match parse_minifun_tokens(tokens) {
-            Ok(term) => {
-                println!("MiniFun Parsed AST: {:?}", term);
-
-                match eval_minifun_program(&term) {
-                    Ok(result) => {
-                        println!("MiniFun program finished successfully.");
-                        println!("MiniFun result = {:?}", result);
-                    }
-                    Err(error) => {
-                        println!("MiniFun runtime error:");
-                        println!("{}", error);
-                    }
-                }
-            }
-            Err(error) => {
-                println!("MiniFun parser error:");
-                println!("{}", error);
-            }
-        }
-    }
-    Err(error) => {
-        println!("MiniFun lexer error:");
-        println!("{}", error);
-    }
-}
+    // Ill-typed Fragment 3 tests
+    test_minifun("fun x : bool => x + 1");
+    test_minifun("if true then 1 else false");
+    test_minifun("5 2");
+    test_minifun("letfun f x : int = x + 1 in f 5");
 }

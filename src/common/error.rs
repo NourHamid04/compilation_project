@@ -33,6 +33,7 @@ pub enum EvalError {
     ParseError(String),
     UnexpectedEndOfInput,
     TypeError(String),
+    TypeCheckError(String),
 
 }
 
@@ -68,7 +69,10 @@ impl fmt::Display for EvalError {
             EvalError::TypeError(message) => {
                 write!(f, "Type error: {}", message)
             }
-
+            
+            EvalError::TypeCheckError(message) => {
+                write!(f, "Type checking error: {}", message)
+            }
 
             EvalError::UnexpectedEndOfInput => {
                 write!(f, "Parse error: unexpected end of input.")
