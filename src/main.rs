@@ -11,7 +11,7 @@ use minifun::eval::eval_program as eval_minifun_program;
 use minifun::lexer::tokenize as tokenize_minifun;
 use minifun::parser::parse_tokens as parse_minifun_tokens;
 use minifun::typecheck::typecheck_program;
-
+use miniimp::cfg::build_cfg;
 fn test_minifun(source: &str) {
     println!("MiniFun source: {}", source);
 
@@ -73,13 +73,20 @@ fn main() {
                 Ok(cmd) => {
                     println!("Parsed AST: {:?}", cmd);
 
-                    let program = Program {
-                        input_var: "in".to_string(),
-                        output_var: "out".to_string(),
-                        body: cmd,
-                    };
+                        let program = Program {
+                            input_var: "in".to_string(),
+                            output_var: "out".to_string(),
+                            body: cmd,
+                        };
 
-                    match eval_miniimp_program(&program, 5) {
+                        // Build the CFG from the MiniImp program
+                        let cfg = build_cfg(&program);
+
+                        // Print the CFG
+                        println!("CFG:");
+                        println!("{:#?}", cfg);
+
+                        match eval_miniimp_program(&program, 5) {
                         Ok(result) => {
                             println!("MiniImp program finished successfully.");
                             println!("MiniImp result = {}", result);
