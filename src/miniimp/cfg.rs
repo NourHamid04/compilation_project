@@ -34,6 +34,8 @@ pub struct Cfg {
     pub end: NodeId,
 }
 
+/// Create and adds a new CFG node.
+
 fn new_node(nodes: &mut Vec<Node>, block: Block) -> NodeId {
     let id = nodes.len();
 
@@ -46,12 +48,19 @@ fn new_node(nodes: &mut Vec<Node>, block: Block) -> NodeId {
     id
 }
 
+/// Builds the CFG recursively for a MiniImp command.
+
 fn build_command(nodes: &mut Vec<Node>, command: &Cmd) -> (NodeId, NodeId) {
     match command {
+        // Create the CFG node for a skip statement.
+
         Cmd::Skip => {
             let node = new_node(nodes, Block::Skip);
             (node, node)
         }
+
+        // Create the CFG node for an assignment statement.
+
 
         Cmd::Assign(variable, expression) => {
             let node = new_node(
@@ -60,6 +69,7 @@ fn build_command(nodes: &mut Vec<Node>, command: &Cmd) -> (NodeId, NodeId) {
             );
             (node, node)
         }
+        // Build the CFG for a sequence and connects the two commands.
 
         Cmd::Seq(first, second) => {
             let (first_start, first_end) = build_command(nodes, first);
@@ -69,6 +79,7 @@ fn build_command(nodes: &mut Vec<Node>, command: &Cmd) -> (NodeId, NodeId) {
 
             (first_start, second_end)
         }
+        // Builds the CFG for an if statement with two branches.
 
         Cmd::If(condition, then_command, else_command) => {
             let condition_node = new_node(nodes, Block::Condition(condition.clone()));
@@ -88,6 +99,7 @@ fn build_command(nodes: &mut Vec<Node>, command: &Cmd) -> (NodeId, NodeId) {
 
             (condition_node, after_if)
         }
+        // Build the CFG for a while loop with a back edge.
 
         Cmd::While(condition, body) => {
             let condition_node = new_node(nodes, Block::Condition(condition.clone()));
@@ -107,6 +119,8 @@ fn build_command(nodes: &mut Vec<Node>, command: &Cmd) -> (NodeId, NodeId) {
         }
     }
 }
+
+// Build the complete CFG for a MiniImp program.
 
 pub fn build_cfg(program: &Program) -> Cfg {
     let mut nodes = Vec::new();
