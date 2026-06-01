@@ -32,6 +32,8 @@ pub struct Cfg {
     pub nodes: Vec<Node>,
     pub start: NodeId,
     pub end: NodeId,
+    pub input_var: String,
+    pub output_var: String,
 }
 
 /// Create and adds a new CFG node.
@@ -127,5 +129,11 @@ pub fn build_cfg(program: &Program) -> Cfg {
 
     let (start, end) = build_command(&mut nodes, &program.body);
 
-    Cfg { nodes, start, end }
+    Cfg {
+        nodes,
+        start,
+        end,
+        input_var: program.input_var.clone(),
+        output_var: program.output_var.clone(),
+    }
 }

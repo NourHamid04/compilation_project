@@ -12,6 +12,11 @@ use minifun::lexer::tokenize as tokenize_minifun;
 use minifun::parser::parse_tokens as parse_minifun_tokens;
 use minifun::typecheck::typecheck_program;
 use miniimp::cfg::build_cfg;
+use miniimp::dataflow::{
+    defined_variables,
+    live_variables,
+    reaching_definitions,
+};
 fn test_minifun(source: &str) {
     println!("MiniFun source: {}", source);
 
@@ -63,8 +68,19 @@ fn test_minifun(source: &str) {
 }
 
 fn main() {
-    let source = "out := in + 2";
-
+let source = "
+        x := in;
+        (
+            if x < 0 then (
+                y := x + 3;
+                x := y
+            )
+            else (
+                y := 1 - x
+            )
+        );
+        out := y
+        ";
     match tokenize(source) {
         Ok(tokens) => {
             println!("Tokens: {:?}", tokens);
@@ -85,6 +101,20 @@ fn main() {
                         // Print the CFG
                         println!("CFG:");
                         println!("{:#?}", cfg);
+
+
+                        let defined_cfg = defined_variables(&cfg);
+                        println!("Defined variables:");
+                        println!("{:#?}", defined_cfg);
+
+                        let live_cfg = live_variables(&cfg);
+                        println!("Live variables:");
+                        println!("{:#?}", live_cfg);
+
+                        let reaching_cfg = reaching_definitions(&cfg);
+                        println!("Reaching definitions:");
+                        println!("{:#?}", reaching_cfg);
+
 
                         match eval_miniimp_program(&program, 5) {
                         Ok(result) => {
