@@ -5,3 +5,4 @@ pub mod lexer;
 pub mod parser;
 pub mod cfg;
 pub mod dataflow;
+pub mod optimizations;

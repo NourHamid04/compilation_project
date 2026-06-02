@@ -17,6 +17,22 @@ use miniimp::dataflow::{
     live_variables,
     reaching_definitions,
 };
+
+
+
+use miniimp::optimizations::{
+    check_undefined_variables,
+    constant_folding,
+    constant_propagation,
+    dead_store_elimination,
+    optimize_cfg,
+};
+
+
+
+
+
+
 fn test_minifun(source: &str) {
     println!("MiniFun source: {}", source);
 
@@ -69,18 +85,11 @@ fn test_minifun(source: &str) {
 
 fn main() {
 let source = "
-        x := in;
-        (
-            if x < 0 then (
-                y := x + 3;
-                x := y
-            )
-            else (
-                y := 1 - x
-            )
-        );
-        out := y
-        ";
+a := 30;
+b := 9 - (0 * a);
+x := 5;
+out := x + b
+";
     match tokenize(source) {
         Ok(tokens) => {
             println!("Tokens: {:?}", tokens);
@@ -114,6 +123,58 @@ let source = "
                         let reaching_cfg = reaching_definitions(&cfg);
                         println!("Reaching definitions:");
                         println!("{:#?}", reaching_cfg);
+
+
+
+                        // ===== Fragment 7  =====
+
+                        check_undefined_variables(&cfg);
+
+                        println!();
+                        println!("-----------------------------");
+                        println!();
+
+                        let (folded_cfg, _) = constant_folding(&cfg);
+
+                        println!("After Constant Folding:");
+                        println!("{:#?}", folded_cfg);
+
+                        println!();
+                        println!("-----------------------------");
+                        println!();
+
+                        let (propagated_cfg, _) = constant_propagation(&cfg);
+
+                        println!("After Constant Propagation:");
+                        println!("{:#?}", propagated_cfg);
+
+                        println!();
+                        println!("-----------------------------");
+                        println!();
+
+                        let (dead_store_cfg, _) = dead_store_elimination(&cfg);
+
+                        println!("After Dead Store Elimination:");
+                        println!("{:#?}", dead_store_cfg);
+
+                        println!();
+                        println!("-----------------------------");
+                        println!();
+
+                        let optimized_cfg = optimize_cfg(&cfg);
+
+                        println!("After Optimization Pipeline:");
+                        println!("{:#?}", optimized_cfg);
+
+
+
+
+
+
+
+
+
+
 
 
                         match eval_miniimp_program(&program, 5) {
