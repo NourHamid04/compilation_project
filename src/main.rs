@@ -28,6 +28,7 @@ use miniimp::optimizations::{
     optimize_cfg,
 };
 
+use miniimp::llvm::write_llvm_ir;
 
 
 
@@ -103,6 +104,11 @@ out := x + b
                             output_var: "out".to_string(),
                             body: cmd,
                         };
+                        // Fragment 8 - Generate LLVM IR
+                        match write_llvm_ir(&program, "program.ll") {
+                            Ok(_) => println!("LLVM IR generated successfully."),
+                            Err(error) => println!("LLVM generation error: {}", error),
+                        }
 
                         // Build the CFG from the MiniImp program
                         let cfg = build_cfg(&program);
