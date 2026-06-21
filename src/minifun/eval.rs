@@ -2,37 +2,19 @@ use crate::common::error::EvalError;
 use crate::minifun::ast::Term;
 use crate::minifun::runtime::{Env, Value};
 
-/// Evaluates a MiniFun term in the current environment.
-///
-/// It returns:
-/// - Ok(value) if evaluation succeeds
-/// - Err(EvalError) if something goes wrong, such as:
-///   - reading an undefined variable
-///   - applying arithmetic to non-integer values
-///   - applying a non-function value
-
-
+// Evaluate a MiniFun term in the given environment
 pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
     match term {
-        // Integer literals evaluate to integer values.
+// Basic values and variables
         Term::Int(value) => Ok(Value::Int(*value)),
-
-        // Boolean literals evaluate to boolean values.
         Term::True => Ok(Value::Bool(true)),
         Term::False => Ok(Value::Bool(false)),
-
-        // Variable lookup:
-        // we search for the variable in the current environment.
         Term::Var(name) => env
             .get(name)
             .cloned()
             .ok_or_else(|| EvalError::UndefinedVariable(name.clone())),
 
-        // Function values are evaluated as closures.
-        // A closure stores:
-        // 1. the parameter name
-        // 2. the function body
-        // 3. the current environment
+ 
 
         Term::Fun(parameter_name, _parameter_type, body) => {
                 Ok(Value::Closure(
@@ -42,11 +24,7 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
             ))
         }
 
-        // let x = t1 in t2
-        //
-        // 1. evaluate t1
-        // 2. extend the environment with x
-        // 3. evaluate t2 in the updated environment
+ // Functions, let-bindings, and recursive functions
         Term::Let(name, value_term, body_term) => {
             let value = eval_term(env, value_term)?;
             let mut updated_env = env.clone();
@@ -54,10 +32,6 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
             eval_term(&updated_env, body_term)
         }
 
-        // letfun f x = t1 in t2
-        //
-        // This creates a recursive closure and binds it to f.
-        // Then t2 is evaluated in the extended environment.
         Term::LetFun(function_name, parameter_name, _function_type, function_body, in_term) => {
                 let mut updated_env = env.clone();
 
@@ -72,9 +46,7 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
             eval_term(&updated_env, in_term)
         }
 
-        // if t1 then t2 else t3
-        //
-        // First evaluate the condition and it must produce a boolean value ,then choose the correct branch.
+  // Conditional expression
        
         Term::If(condition, then_term, else_term) => {
             let condition_value = eval_term(env, condition)?;
@@ -88,18 +60,13 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
             }
         }
 
-        // Function application: t1 t2
-        //
-        // 1. evaluate the function term
-        // 2. evaluate the argument term
-        // 3. apply the function if it is a closure
+ // Function application
         Term::App(function_term, argument_term) => {
             let function_value = eval_term(env, function_term)?;
             let argument_value = eval_term(env, argument_term)?;
 
             match function_value {
-                // bind the argument to the parameter in the saved closure environment,
-                // then evaluate the body there.
+                // bind the argument to the parameter in the saved closure environment
                 Value::Closure(parameter_name, body, closure_env) => {
                     let mut updated_env = closure_env.clone();
                     updated_env.insert(parameter_name, argument_value);
@@ -107,8 +74,7 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
                 }
 
                 // Recursive closure:
-                // the function name must also be available in the environment,
-                // so the body can call itself recursively.
+             
                 Value::RecClosure(function_name, parameter_name, body, closure_env) => {
                     let mut updated_env = closure_env.clone();
 
@@ -125,15 +91,13 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
                     eval_term(&updated_env, &body)
                 }
 
-                // Any other value cannot be applied like a function.
                 _ => Err(EvalError::TypeError(
                     "attempted to apply a non-function value".to_string(),
                 )),
             }
         }
 
-        // For arithmetic operators, we first evaluate both sides.
-        // Then we check that both values are integers.
+// Arithmetic operators
         Term::Add(left, right) => {
             let left_value = eval_term(env, left)?;
             let right_value = eval_term(env, right)?;
@@ -169,9 +133,8 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
                 )),
             }
         }
-
+// Boolean operators and comparisons
         // Logical AND:
-        // both sub-terms must evaluate to boolean values.
         Term::And(left, right) => {
             let left_value = eval_term(env, left)?;
             let right_value = eval_term(env, right)?;
@@ -185,7 +148,6 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
         }
 
         // Less-than comparison:
-        // both sub-terms must evaluate to integer values.
         Term::Less(left, right) => {
             let left_value = eval_term(env, left)?;
             let right_value = eval_term(env, right)?;
@@ -199,7 +161,6 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
         }
 
         // Logical negation:
-        // the sub-term must evaluate to a boolean value.
         Term::Not(term) => {
             let value = eval_term(env, term)?;
 
@@ -214,8 +175,6 @@ pub fn eval_term(env: &Env, term: &Term) -> Result<Value, EvalError> {
 }
 
 /// Runs a complete MiniFun term.
-///
-/// Evaluation starts with an empty environment.
 pub fn eval_program(term: &Term) -> Result<Value, EvalError> {
     let initial_env = Env::new();
     eval_term(&initial_env, term)

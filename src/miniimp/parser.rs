@@ -2,14 +2,13 @@ use crate::common::error::EvalError;
 use crate::miniimp::ast::{BoolExpr, Cmd, Expr};
 use crate::miniimp::lexer::Token;
 
-/// A simple recursive-descent parser for MiniImp.
-///
-/// The parser reads a list of tokens and builds the corresponding AST.
-/// It keeps track of the current token using `position`.
+// Parser state: token list and current position
+
 pub struct Parser {
     tokens: Vec<Token>,
     position: usize,
 }
+// Basic token navigation helpers
 
 impl Parser {
     /// Creates a new parser from a token list.
@@ -56,13 +55,8 @@ impl Parser {
         }
     }
 
-    /// Parses a full command.
-    ///
-    /// This also handles sequencing with ';'
-    /// so something like:
-    ///     x := 1; y := 2; skip
-    /// becomes:
-    ///     Seq(Assign(...), Seq(Assign(...), Skip))
+// Command parsing
+
     pub fn parse_cmd(&mut self) -> Result<Cmd, EvalError> {
         let mut cmd = self.parse_simple_cmd()?;
 
@@ -126,7 +120,6 @@ impl Parser {
     }
 
     /// Parses an assignment:
-    ///     identifier := expression
     fn parse_assignment(&mut self) -> Result<Cmd, EvalError> {
         let variable_name = match self.advance() {
             Some(Token::Identifier(name)) => name,
@@ -145,7 +138,7 @@ impl Parser {
         Ok(Cmd::Assign(variable_name, expr))
     }
 
-    /// Entry point for arithmetic expressions.
+// Arithmetic expression parsing
     pub fn parse_expr(&mut self) -> Result<Expr, EvalError> {
         self.parse_add_sub()
     }
@@ -211,7 +204,7 @@ impl Parser {
         }
     }
 
-    /// Entry point for boolean expressions.
+// Boolean expression parsing
     pub fn parse_bool_expr(&mut self) -> Result<BoolExpr, EvalError> {
         self.parse_bool_and()
     }
@@ -240,11 +233,7 @@ impl Parser {
         }
     }
 
-    /// Parses:
-    /// - true
-    /// - false
-    /// - parenthesized boolean expressions
-    /// - comparisons like expr < expr
+
     fn parse_bool_primary(&mut self) -> Result<BoolExpr, EvalError> {
         match self.peek() {
             Some(Token::True) => {
@@ -280,8 +269,8 @@ impl Parser {
         }
     }
 
-    /// Utility function:
-    /// after parsing, there should be no extra tokens left.
+// Parse the full input and reject extra tokens
+
     pub fn finish(mut self) -> Result<Cmd, EvalError> {
         let cmd = self.parse_cmd()?;
 
@@ -300,6 +289,8 @@ impl Parser {
 
 
 }
+
+// Public parser entry point
     pub fn parse_tokens(tokens: Vec<Token>) -> Result<Cmd, EvalError> {
         let parser = Parser::new(tokens);
         parser.finish()

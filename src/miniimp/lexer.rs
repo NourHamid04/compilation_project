@@ -1,7 +1,7 @@
 use crate::common::error::EvalError;
 
-/// Tokens are the small building blocks produced by the lexer.
-/// The parser will consume these tokens and build the AST.
+// Tokens recognized by the MiniImp lexer
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Identifier(String),
@@ -30,12 +30,12 @@ pub enum Token {
     Less,       // <
 }
 
-/// Converts source code text into a list of tokens.
+// Convert source code into a sequence of tokens
 pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
     let chars: Vec<char> = source.chars().collect();
     let mut tokens = Vec::new();
     let mut i = 0;
-
+// Scan the input one character at a time
     while i < chars.len() {
         let current = chars[i];
 
@@ -90,7 +90,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, EvalError> {
             continue;
         }
 
-        // Read symbols and operators.
+// Recognize MiniImp symbols and operators
         match current {
             ':' => {
                 if i + 1 < chars.len() && chars[i + 1] == '=' {

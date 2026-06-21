@@ -2,10 +2,8 @@ use crate::common::error::EvalError;
 use crate::minifun::ast::Term;
 use crate::minifun::lexer::Token;
 use crate::minifun::types::Type;
-/// A simple recursive-descent parser for MiniFun.
-///
-/// The parser reads a list of tokens and builds the corresponding AST.
-/// It keeps track of the current token using `position`.
+///  recursive-descent parser for MiniFun.
+
 pub struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -56,7 +54,7 @@ impl Parser {
         }
     }
 
-    /// Entry point for MiniFun terms.
+// MiniFun term parsing
     pub fn parse_term(&mut self) -> Result<Term, EvalError> {
         match self.peek() {
             Some(Token::If) => self.parse_if(),
@@ -67,8 +65,7 @@ impl Parser {
         }
     }
 
-    /// Parses:
-    /// if t1 then t2 else t3
+  
     fn parse_if(&mut self) -> Result<Term, EvalError> {
         self.expect(Token::If)?;
         let condition = self.parse_term()?;
@@ -84,8 +81,6 @@ impl Parser {
         ))
     }
 
-    /// Parses:
-    /// let x = t1 in t2
     fn parse_let(&mut self) -> Result<Term, EvalError> {
         self.expect(Token::Let)?;
 
@@ -112,8 +107,6 @@ impl Parser {
         ))
     }
 
-    /// Parses:
-    /// letfun f x = t1 in t2
     fn parse_letfun(&mut self) -> Result<Term, EvalError> {
         self.expect(Token::LetFun)?;
 
@@ -156,8 +149,7 @@ impl Parser {
         ))
     }
 
-    /// Parses:
-    /// fun x => t
+
     fn parse_fun(&mut self) -> Result<Term, EvalError> {
         self.expect(Token::Fun)?;
 
@@ -243,12 +235,7 @@ impl Parser {
         Ok(term)
     }
 
-    /// Parses function application.
-    ///
-    /// Function application has high precedence, so:
-    ///     f x + 1
-    /// becomes:
-    ///     Add(App(f, x), 1)
+// Function application parsing
     fn parse_application(&mut self) -> Result<Term, EvalError> {
         let mut term = self.parse_unary()?;
 
@@ -283,11 +270,7 @@ impl Parser {
         )
     }
 
-    /// Parses the smallest term units:
-    /// - integers
-    /// - booleans
-    /// - variables
-    /// - parenthesized terms
+
     fn parse_primary(&mut self) -> Result<Term, EvalError> {
         match self.advance() {
             Some(Token::Number(value)) => Ok(Term::Int(value)),
@@ -312,8 +295,7 @@ impl Parser {
         }
     }
 
-    /// Utility function:
-    /// after parsing, there should be no extra tokens left.
+// Parse the complete input
     pub fn finish(mut self) -> Result<Term, EvalError> {
         let term = self.parse_term()?;
 
@@ -327,7 +309,7 @@ impl Parser {
         Ok(term)
     }
     
-/// Parses a type (e.g., int, bool, int -> int)
+// Type parsing
 fn parse_type(&mut self) -> Result<Type, EvalError> {
     let mut ty = self.parse_atomic_type()?;
 
@@ -370,7 +352,7 @@ fn parse_atomic_type(&mut self) -> Result<Type, EvalError> {
 
 }
 
-/// Parses a full MiniFun token list into an AST term.
+// Public parser entry point
 pub fn parse_tokens(tokens: Vec<Token>) -> Result<Term, EvalError> {
     let parser = Parser::new(tokens);
     parser.finish()

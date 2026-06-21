@@ -1,7 +1,6 @@
 use crate::common::error::EvalError;
 
-/// Tokens are the small building blocks produced by the lexer.
-/// The parser will consume these tokens and build the AST.
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Identifier(String),

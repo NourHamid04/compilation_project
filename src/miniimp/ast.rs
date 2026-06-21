@@ -1,10 +1,11 @@
+// MiniImp program representation
 #[derive(Debug, Clone)]
 pub struct Program {
     pub input_var: String,
     pub output_var: String,
     pub body: Cmd,
 }
-
+// MiniImp commands
 #[derive(Debug, Clone)]
 pub enum Cmd {
     Skip,
@@ -13,7 +14,7 @@ pub enum Cmd {
     If(BoolExpr, Box<Cmd>, Box<Cmd>),
     While(BoolExpr, Box<Cmd>),
 }
-
+// Arithmetic and boolean expressions
 #[derive(Debug, Clone)]
 pub enum Expr {
     Var(String),
