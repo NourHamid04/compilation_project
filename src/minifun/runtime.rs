@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::minifun::ast::Term;
 
-// Values produced by MiniFun evaluation.
 #[derive(Debug, Clone)]
 pub enum Value {
     Int(i64),
@@ -16,5 +15,4 @@ pub enum Value {
 }
 
 /// MiniFun environment:
-/// maps variable names to values.
 pub type Env = HashMap<String, Value>;
